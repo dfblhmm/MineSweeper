@@ -14,8 +14,8 @@ interface DOMNode {
   isMark: boolean // 是否已经标雷
   isOpen: boolean // 是否已经点开
 }
-class Container {
-  level: number // 游戏的等级
+class Game {
+  level: number // 游戏等级
   minePosition: boolean[][] //存放地雷的坐标
   domStore: DOMNode[][] // 存储DOM节点
   rows: number // 行数
@@ -26,7 +26,7 @@ class Container {
   isTimeStart: boolean // 计时器是否已经开启
   timeCounter: HTMLElement // 计时器DOM元素
   surplusMineCounter: HTMLElement // 剩余雷的计数DOM元素
-  timer: number | null // 定时器id
+  timer: number | undefined // 定时器id
   surplusCell: number // 还未显示的格子数
   constructor(level: number, rows: number, columns: number, minCount: number) {
     this.level = level
@@ -39,18 +39,18 @@ class Container {
     this.colors = ['#414FBC', '#2A6206', '#AB0609', '#010088', '#7C0104', '#017D7F', '#AE0304', '#AD0713']
     this.isTimeStart = false
     this.timeCounter = document.getElementById('timer')!
-    this.timer = null
+    this.timer = undefined
     this.surplusMineCounter = document.getElementById('surplus-mine-count')!
     this.surplusCell = rows * columns
   }
   // 初始化界面
   init() {
     // 获取容器元素
-    const container: HTMLElement = document.getElementById('container')!
+    const gameArea: HTMLElement = document.getElementById('game')!
     // 获取行数和列数
     const { rows, columns } = this
     // 更改Grid布局样式
-    container.style.gridTemplateColumns = `repeat(${columns}, 1fr)`
+    gameArea.style.gridTemplateColumns = `repeat(${columns}, 1fr)`
     // 根据游戏等级或自定义来渲染不同数量的单元格
     for(let i = 0; i < rows ; i++) {
       this.domStore[i] = []
@@ -60,7 +60,7 @@ class Container {
         cell.className = 'cell'
         cell.setAttribute('index', i + '-' + j)
         // 向容器中追加DOM节点
-        container.appendChild(cell)
+        gameArea.appendChild(cell)
         this.domStore[i][j] = {
           element: cell,
           clickCount: 0,
@@ -73,11 +73,14 @@ class Container {
     // 初始化雷的信息
     this.initMine()
     // 绑定鼠标右键事件
-    this.handleContextMenu(container)
+    this.handleContextMenu(gameArea)
     // 绑定鼠标单击事件
-    this.handleClick(container)
+    this.handleClick(gameArea)
     // 初始化雷计数器中的数量
     this.updateSurplusMineCount()
+    // 点击按钮切换等级
+    this.changeLevel(gameArea)
+    
   }
 
   // 生成地雷
@@ -126,8 +129,8 @@ class Container {
   }
 
   //绑定鼠标右键点击事件
-  handleContextMenu(container: HTMLElement) {
-    container.addEventListener('contextmenu', e => {
+  handleContextMenu(gameArea: HTMLElement) {
+    gameArea.addEventListener('contextmenu', e => {
       e.preventDefault()
       // 获取当前点击的单元格坐标
       const { row, column } = this.getCurrentPosition(e)
@@ -160,8 +163,8 @@ class Container {
   }
 
   // 绑定鼠标单击事件——挖雷模式
-  handleClick(container: HTMLElement) {
-    container.addEventListener('click', e => {
+  handleClick(gameArea: HTMLElement) {
+    gameArea.addEventListener('click', e => {
       // 开始计时
       this.startTime()
       // 获取当前点击单元格的坐标
@@ -170,7 +173,10 @@ class Container {
       // 该单元格已经标雷或者已被打开
       if (isMark || isOpen) return
       // 挖到雷
-      if (this.minePosition[row][column]) return alert('游戏结束')
+      if (this.minePosition[row][column]) {
+        this.endTime()
+        return alert('游戏结束')
+      }
       // 挖到空格
       this.show(row, column, this.getMineCount(row, column)) // 显示当前单元格
     })
@@ -185,6 +191,12 @@ class Container {
         this.timeCounter.innerText = `${++time}`
       }, 1000)
     } 
+  }
+
+  // 游戏结束，停止计时
+  endTime() {
+    window.clearInterval(this.timer)
+    this.timer = undefined
   }
 
   // 计算以当前坐标为中心的周围8个方格的雷数
@@ -210,7 +222,10 @@ class Container {
     element.className = 'cell no-mine'
     // 更新还未显示的格子数
     this.surplusCell--
-    if (this.surplusCell === this.mineCount) return alert('你赢了')
+    if (this.surplusCell === this.mineCount) {
+      this.endTime()
+      return alert('你赢了')
+    }
     // 四周有雷
     if (mineSum) {
       // 显示当前格子四周的雷数
@@ -234,6 +249,44 @@ class Container {
       }
     }
   }
+
+  // 切换等级
+  changeLevel(gameArea: HTMLElement) {
+    const header: HTMLElement = document.querySelector('.header')!
+    const btnCollection: NodeListOf<HTMLElement> = document.querySelectorAll('.header > button')!
+    // 事件委托绑定事件
+    header.addEventListener('click', e => {
+      e.stopPropagation()
+      // 清除定时器
+      window.clearInterval(this.timer)
+      // 计时归零
+      this.timeCounter.innerText = '0'
+      for(let i = 0; i < btnCollection.length; i++) {
+        btnCollection[i].className = ''
+      }
+      const currentNode = e.target as HTMLElement
+      currentNode.className = 'active'
+      const index: number = parseInt(currentNode.getAttribute('index') as string)
+      switch(index) {
+        case 1: 
+          gameArea.innerHTML = ''
+          document.documentElement.style.fontSize = '16px'
+          new Game(index, 9, 9, 10).init()
+          break
+        case 2: 
+          gameArea.innerHTML = ''
+          document.documentElement.style.fontSize = '14px'
+          new Game(index, 16, 16, 40).init()
+          break
+        case 3: 
+          gameArea.innerHTML = ''
+          document.documentElement.style.fontSize = '12px'
+          new Game(index, 16, 30, 99).init()
+          break
+      }
+    })
+  }
 }
 
-new Container(1, 9, 9, 10).init()
+
+new Game(1, 9, 9, 10).init()
