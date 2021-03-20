@@ -1,0 +1,121 @@
+body {
+	position: relative;
+	background-color: #9CABC8;
+	background: linear-gradient(to right, #9CABC8, #C3D0E0, #9CABC8);
+}
+#container {
+	position: fixed;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%,-50%);
+	box-shadow: 0 0 2px 2px skyblue;
+	border-left: 2px solid #000;
+	border-top: 2px solid #000;
+	display: grid;
+	grid-template-columns: repeat(9, 1fr);
+	
+	// 单元格
+	.cell {
+		width: 38px;
+		height: 38px;
+		background: url('../images/cell.png') no-repeat;
+		background-size: cover;
+		border-right: 2px solid #000;
+		border-bottom: 2px solid #000;
+		text-align: center;
+		line-height: 38px;
+		font-size: 25px;
+		&:hover {
+			background: url('../images/cell_light.png') no-repeat;
+			background-size: cover;
+		}
+
+		// 含雷
+		&.mark {
+			background: url('../images/mark.png') no-repeat;
+			background-size: cover;
+			&:hover {
+				background: url('../images/mark_light.png') no-repeat;
+				background-size: cover;
+			}
+		}
+
+		// 问号
+		&.uncertainty {
+			background: url('../images/uncertainty.png') no-repeat;
+			background-size: cover;
+			&:hover {
+				background: url('../images/uncertainty_light.png') no-repeat;
+				background-size: cover;
+			}
+		}
+
+		// 无雷
+		&.no-mine {
+			background: #C6D4E9;
+			animation: clear .3s linear;
+		}
+	}
+
+	// 底部
+	.footer {
+		width: calc(100% + 2px);
+		height: 50px;
+		position: absolute;
+		left: -2px;
+		bottom: -70px;
+		display: flex;
+
+		.timer, .surplus-mine {
+			flex: 1;
+			height: 100%;
+			display: flex;
+			align-items: center;
+			// 图片
+			.icon {
+				height: 100%;
+				width: 50px;
+				border-radius: 50%;
+				background-size: cover;
+			}
+			// 数字
+			.number {
+				height: 40px;
+				width: 100px;
+				margin-left: 10px;
+				border-radius: 10px;
+				background: linear-gradient(to right, #2B4B88, #406EBB);
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				color: #fff;
+				font-size: 25px;
+			}
+		} 
+
+		// 时间
+		.timer .icon  {
+			background: url('../images/timer.png');
+		}
+
+		// 剩余雷数
+		.surplus-mine {
+			flex-direction: row-reverse;
+			.icon {
+				background: #000 url('../images/mine.png') no-repeat;
+			}
+			.number {
+				margin: 0 10px 0 0;
+			}
+		}
+	}
+}
+
+@keyframes clear {
+	from {
+		background-color: #97D8DF;
+	}
+	to {
+		background-color: #C6D4E9;
+	}
+}
