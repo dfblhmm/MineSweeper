@@ -87,6 +87,7 @@ class Game {
     this.updateSurplusMineCount()
     // 点击按钮切换等级
     this.changeLevel()
+    
   }
 
   // 生成地雷
@@ -185,8 +186,7 @@ class Game {
         this.endTime()
         this.removeListener() // 移除事件监听器
         this.showAllMine() // 显示所有的雷
-        this.reset() // 等待重置
-        return alert('游戏结束')
+        return this.reset() // 等待重置
       }
       // 挖到空格
       this.show(row, column, this.getMineCount(row, column)) // 显示当前单元格
@@ -235,7 +235,8 @@ class Game {
     this.surplusCell--
     if (this.surplusCell === this.mineCount) {
       this.endTime()
-      return alert('你赢了')
+      // 遮罩层
+      return this.initMask()
     }
     // 四周有雷
     if (mineSum) {
@@ -422,6 +423,17 @@ class Game {
         if (this.minePosition[r][c]) this.domStore[r][c].element.className = 'cell open-mine'
       }
     }
+  }
+
+  // 游戏成功时的遮罩层
+  initMask() {
+    const mask = document.getElementById('mask')!
+    mask.style.width = this.gameArea.offsetWidth + 'px'
+    mask.style.height = this.gameArea.offsetHeight + 'px'
+    mask.style.lineHeight = this.gameArea.offsetHeight + 'px'
+    mask.style.top = this.gameArea.offsetTop + 'px'
+    mask.className = 'win'
+    setTimeout(() => mask.className = '', 3000)
   }
 }
 

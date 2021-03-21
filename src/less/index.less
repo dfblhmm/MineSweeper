@@ -228,6 +228,21 @@ body {
 	}
 }
 
+// 游戏赢了的遮罩层
+#mask {
+	position: absolute;
+	z-index: 999;
+	text-align: center;
+	font-size: 30px;
+	color: #fff;
+	display: none;
+	&.win {
+		display: block;
+		animation: win 3s ease-in-out;
+	}
+}
+
+// 显示空格
 @keyframes clear {
 	from {
 		background-color: #97D8DF;
@@ -237,6 +252,22 @@ body {
 	}
 }
 
+// 游戏赢了
+@keyframes win {
+	0% {
+		background-color: transparent;
+		transform: translate(100%);
+	}
+	99% {
+		background-color: #4D71CC;
+	}
+	100% {
+		background-color: transparent;
+		transform: translate(0);
+	}
+}
+
+// 蓝色按钮
 .primary {
 	border: 1px solid #46b8da;
 	background-color: #5bc0de;
@@ -246,6 +277,7 @@ body {
 	}
 }
 
+// 红色按钮
 .error {
 	border: 1px solid #d43f3a;
 	background-color: #d9534f;
