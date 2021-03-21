@@ -16,7 +16,7 @@ body {
 		box-shadow: 0 0 2px 2px skyblue;
 		border-left: 2px solid #000;
 		border-top: 2px solid #000;
-		margin-top: 20px;
+		margin-top: 15px;
 	}
 
 	// 单元格
@@ -67,7 +67,7 @@ body {
 	.footer {
 		width: calc(100% + 2px);
 		height: 50px;
-		margin-top: 20px;
+		margin-top: 15px;
 		display: flex;
 
 		.timer, .surplus-mine {
@@ -124,16 +124,7 @@ body {
 			flex: 1;
 			margin: 0 15px;
 			border: 0;
-			color: #fff;
-			border: 1px solid #46b8da;
-			background-color: #5bc0de;
-			border-radius: 5px;
-			cursor: pointer;
-			outline: none;
-			&:hover {
-				background-color: #31b0d5;
-				border-color: #269abc;
-			}
+			.primary;
 			&.active {
 				background-color: #d9534f;
 				border-color: #d43f3a;
@@ -146,11 +137,99 @@ body {
 	}
 }
 
+// 自定义输入区域
+#custom {
+	position: absolute;
+	z-index: 99;
+	background-color: #6b92e0;
+	color: #34558B;
+	display: none;
+	
+	// 自定义选项
+	.custom-option {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		.input-container {
+			margin-bottom: 10px;
+			position: relative;
+				// 输入框
+			input {
+				width: 100px;
+				height: 25px;
+				box-sizing: border-box;
+				outline: none;
+				border: none;
+				background-color: #C3D0E0;
+				border-radius: 5px;
+				color: #34558B;
+				transition: all .5s linear;
+				&:focus {
+					border: 1px solid #269abc;
+				}
+			}
+			// 提示
+			.tip {
+				width: 120px;
+				height: 25px;
+				line-height: 25px;
+				text-align: center;
+				position: absolute;
+				right: -122px;
+				top: -2px;
+				z-index: 101;
+				border-radius: 5px;
+				background-color: #fff;
+				font-size: 14px;
+				display: none;
+				// 三角形
+				.caret {
+					position: absolute;
+					left: -11px;
+					top: 25%;
+					width: 0;
+					height: 0;
+					border-color: transparent #fff transparent transparent;
+					border-style: dashed solid dashed dashed;
+					border-width: 6px;
+				}
+			}
+		}
+		// 按钮区域
+		.select {
+			width: 220px;
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			margin-top: 15px;
+			button {
+				height: 30px;
+				.primary;
+			}
+		}
+	}
+}
+
 @keyframes clear {
 	from {
 		background-color: #97D8DF;
 	}
 	to {
 		background-color: #C6D4E9;
+	}
+}
+
+.primary {
+	color: #fff;
+	border: 1px solid #46b8da;
+	background-color: #5bc0de;
+	border-radius: 5px;
+	cursor: pointer;
+	outline: none;
+	&:hover {
+		background-color: #31b0d5;
+		border-color: #269abc;
 	}
 }

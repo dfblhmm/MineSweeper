@@ -24,10 +24,13 @@ class Game {
   surplusMine: number // 标记的剩余的雷数
   colors: string[] // 不同数字对应不同颜色
   isTimeStart: boolean // 计时器是否已经开启
-  timeCounter: HTMLElement // 计时器DOM元素
-  surplusMineCounter: HTMLElement // 剩余雷的计数DOM元素
-  timer: number | undefined // 定时器id
+  timer: number // 定时器id
   surplusCell: number // 还未显示的格子数
+  btnCollection: NodeListOf<HTMLElement> // 头部按钮DOM元素集合
+  htmlElement: HTMLElement // HTML根元素
+  customElement: HTMLElement // 自定义选项容器DOM元素
+  maxMine: number // 雷的最大数量
+
   constructor(level: number, rows: number, columns: number, minCount: number) {
     this.level = level
     this.minePosition = []
@@ -38,10 +41,12 @@ class Game {
     this.surplusMine = minCount
     this.colors = ['#414FBC', '#2A6206', '#AB0609', '#010088', '#7C0104', '#017D7F', '#AE0304', '#AD0713']
     this.isTimeStart = false
-    this.timeCounter = document.getElementById('timer')!
-    this.timer = undefined
-    this.surplusMineCounter = document.getElementById('surplus-mine-count')!
+    this.timer = 0
     this.surplusCell = rows * columns
+    this.btnCollection = document.querySelectorAll('.header > button')!
+    this.htmlElement = document.documentElement
+    this.customElement = document.getElementById('custom')!
+    this.maxMine = 64
   }
   // 初始化界面
   init() {
@@ -114,7 +119,7 @@ class Game {
 
   // 初始化或更新雷计数器中剩余雷的数量
   updateSurplusMineCount() {
-    this.surplusMineCounter.innerText = `${this.surplusMine}`
+    document.getElementById('surplus-mine-count')!.innerText = `${this.surplusMine}`
   }
 
   // 获取当前点击的单元格坐标
@@ -188,7 +193,7 @@ class Game {
     if (!this.isTimeStart) {
       this.isTimeStart = true
       this.timer = window.setInterval(() => {
-        this.timeCounter.innerText = `${++time}`
+        document.getElementById('timer')!.innerText = `${++time}`
       }, 1000)
     } 
   }
@@ -196,7 +201,6 @@ class Game {
   // 游戏结束，停止计时
   endTime() {
     window.clearInterval(this.timer)
-    this.timer = undefined
   }
 
   // 计算以当前坐标为中心的周围8个方格的雷数
@@ -252,41 +256,137 @@ class Game {
 
   // 切换等级
   changeLevel(gameArea: HTMLElement) {
-    const header: HTMLElement = document.querySelector('.header')!
-    const btnCollection: NodeListOf<HTMLElement> = document.querySelectorAll('.header > button')!
     // 事件委托绑定事件
-    header.addEventListener('click', e => {
+    document.querySelector('.header')!.addEventListener('click', e => {
       e.stopPropagation()
+      const currentNode = e.target as HTMLElement
+      const index: number = parseInt(currentNode.getAttribute('index') as string)
+      if (index === this.level) return // 等级并没有切换直接返回
       // 清除定时器
       window.clearInterval(this.timer)
       // 计时归零
-      this.timeCounter.innerText = '0'
-      for(let i = 0; i < btnCollection.length; i++) {
-        btnCollection[i].className = ''
-      }
-      const currentNode = e.target as HTMLElement
-      currentNode.className = 'active'
-      const index: number = parseInt(currentNode.getAttribute('index') as string)
+      document.getElementById('timer')!.innerText = '0'
+      // 切换按钮样式
+      if (index !== 4) this.toggleBtnStyle(currentNode)
       switch(index) {
         case 1: 
           gameArea.innerHTML = ''
-          document.documentElement.style.fontSize = '16px'
+          this.htmlElement.style.fontSize = '16px'
+          this.customElement.style.display = 'none'
           new Game(index, 9, 9, 10).init()
           break
         case 2: 
           gameArea.innerHTML = ''
-          document.documentElement.style.fontSize = '14px'
+          this.htmlElement.style.fontSize = '14px'
+          this.customElement.style.display = 'none'
           new Game(index, 16, 16, 40).init()
           break
         case 3: 
           gameArea.innerHTML = ''
-          document.documentElement.style.fontSize = '12px'
+          this.htmlElement.style.fontSize = '12px'
+          this.customElement.style.display = 'none'
           new Game(index, 16, 30, 99).init()
           break
+        case 4: 
+          this.customElement.style.display = 'block'
+          this.defineGame(gameArea)
       }
     })
   }
+
+  // 切换按钮样式
+  toggleBtnStyle(currentNode: HTMLElement) {
+    for(let i = 0, len = this.btnCollection.length; i < len; i++) {
+      this.btnCollection[i].className = ''
+    }
+    currentNode.className = 'active'
+  }
+
+  // 获取用户输入的自定义参数
+  getCustomOption(rowInput: HTMLInputElement, columnInput: HTMLInputElement): Position {
+    const row = parseInt(rowInput.value)
+    const column = parseInt(columnInput.value)
+    return { row, column }
+  }
+
+  // 预校验用户输入的自定义参数是否符合规范
+  validate(index: number, min: number, max: number) {
+    const rowInput = document.getElementById('row')! as HTMLInputElement
+    const columnInput = document.getElementById('column')! as HTMLInputElement
+    let input: HTMLInputElement
+    input = index === 0 ? rowInput : columnInput
+    input.addEventListener('blur', () => {
+      const obj = this.getCustomOption(rowInput, columnInput)
+      const count = index === 0 ? obj.row : obj.column
+      if (count < min || count > max) {
+        const tip = document.querySelectorAll('.tip')[index] as HTMLElement
+        tip.style.display = 'block'
+        setTimeout(() => tip.style.display = 'none', 2000)
+        input.value = '9'
+      } else {
+        // 更新雷数的可选范围
+        this.maxMine = Math.floor(obj.row * obj. column * 0.8)
+        document.getElementById('mine-count')!.innerText = `（10~${this.maxMine}）`
+      }
+    })
+  }
+  
+  // 自定义游戏
+  defineGame(gameArea: HTMLElement) {
+    // 显示自定义选项区域
+    this.customElement.style.width = gameArea.offsetWidth + 'px'
+    this.customElement.style.height = gameArea.offsetHeight + 'px'
+    this.customElement.style.top = gameArea.offsetTop + 'px'
+    // 取消自定义游戏
+    document.getElementById('cancel')!.addEventListener('click', () => {
+      this.customElement.style.display = 'none'
+    })
+    // 校验行数和列数是否符合规定
+    this.validate(0, 5, 24)
+    this.validate(1, 5, 30)
+    // 雷自定义的输入框
+    const mineInput = document.getElementById('mine')! as HTMLInputElement
+    mineInput.addEventListener('blur', e => {
+      const input = parseInt((e.target as HTMLInputElement).value)
+      if ( input < 10 || input > this.maxMine) {
+        const tip = document.querySelectorAll('.tip')[2] as HTMLElement
+        document.getElementById('mineTip')!.innerText = `必须在10~${this.maxMine}之间`
+        tip.style.display = 'block'
+        setTimeout(() => tip.style.display = 'none', 2000)
+        mineInput.value = '10'
+      }
+    })
+
+    // 点击了开始游戏
+    document.getElementById('repaint')!.addEventListener('click', () => {
+      const mineCount = parseInt(mineInput.value)
+      const row = parseInt((document.getElementById('row')! as HTMLInputElement).value)
+      const column = parseInt((document.getElementById('column')! as HTMLInputElement).value)
+      // 重新渲染游戏
+      gameArea.innerHTML = '' // 清空界面
+      // 适配每个格子的大小
+      this.repaintGUI(row, column, mineCount)
+    })
+  }
+
+  // 重新绘制界面
+  repaintGUI(row: number, column: number, mineCount: number) {
+    this.toggleBtnStyle(this.btnCollection[3])
+    const cellCount = row * column // 获取总格子数
+    if (cellCount >= 81 && cellCount < 256) {
+      this.htmlElement.style.fontSize = 16 - 2 * (cellCount - 81) / 175 + 'px'
+    } else if (cellCount >= 256 && cellCount < 480) {
+      this.htmlElement.style.fontSize = 14 - (cellCount - 256) / 112 + 'px'
+    } else if (cellCount >= 480 && cellCount <= 720) {
+      this.htmlElement.style.fontSize = 12 - (cellCount - 256) / 120 + 'px'
+    }
+    this.customElement.style.display = 'none'
+    repaint(4, row, column, mineCount)
+  }
 }
 
+function repaint(level: number, row: number, column: number, mineCount: number) {
+  new Game(level, row, column, mineCount).init()
+}
 
-new Game(1, 9, 9, 10).init()
+repaint(1, 9, 9 ,10)

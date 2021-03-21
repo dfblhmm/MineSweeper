@@ -19,6 +19,28 @@
     </div>
     <!-- 游戏区域 -->
     <div id="game"></div>
+    <div id="custom">
+      <div class="custom-option">
+        <div class="input-selection">
+          <div class="input-container">
+            <label>行数：<input type="text" id="row" value="9">（5~24）</label>
+            <div class="tip">必须在3~24之间<div class="caret"></div></div>
+          </div>
+          <div class="input-container">
+            <label>列数：<input type="text" id="column" value="9">（5~30）</label>
+            <div class="tip">必须在3~30之间<div class="caret"></div></div>
+          </div>
+          <div class="input-container">
+            <label>雷数：<input type="text" id="mine" value="10"><span id="mine-count">（10~64）</span></label>
+            <div class="tip"><span id="mineTip"></span><div class="caret"></div></div>
+          </div>
+        </div>
+        <div class="select">
+          <button id="repaint">开始游戏</button>
+          <button id="cancel" style="margin-left: 10px">取消</button>
+        </div>
+      </div>
+    </div>
     <!-- 底部 -->
     <div class="footer">
       <!-- 时间 -->
