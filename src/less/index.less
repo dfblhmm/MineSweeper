@@ -61,6 +61,12 @@ body {
 			background: #C6D4E9;
 			animation: clear .3s linear;
 		}
+
+		// 挖到雷
+		&.open-mine {
+			background: url('../images/open_mine.png') no-repeat;
+			background-size: cover;
+		}
 	}
 
 	// 底部
@@ -126,13 +132,23 @@ body {
 			border: 0;
 			.primary;
 			&.active {
-				background-color: #d9534f;
-				border-color: #d43f3a;
-				&:hover {
-					background-color: #c9302c;
-    			border-color: #ac2925;
-				}
+				.error;
 			}
+		}
+	}
+
+	// 重置 
+	.reset {
+		width: 60px;
+		height: 30px;
+		position: absolute;
+		left: -100px;
+		top: 50%;
+		transform: translateY(-50%);
+		button {
+			width: inherit;
+			height: inherit;
+			.error;
 		}
 	}
 }
@@ -222,14 +238,26 @@ body {
 }
 
 .primary {
-	color: #fff;
 	border: 1px solid #46b8da;
 	background-color: #5bc0de;
-	border-radius: 5px;
-	cursor: pointer;
-	outline: none;
 	&:hover {
 		background-color: #31b0d5;
 		border-color: #269abc;
 	}
+}
+
+.error {
+	border: 1px solid #d43f3a;
+	background-color: #d9534f;
+	&:hover {
+		background-color: #c9302c;
+		border-color: #ac2925;
+	}
+}
+
+button {
+	outline: none;
+	cursor: pointer;
+	color: #fff;
+	border-radius: 5px;
 }

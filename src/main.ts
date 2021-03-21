@@ -18,6 +18,7 @@ class Game {
   level: number // 游戏等级
   minePosition: boolean[][] //存放地雷的坐标
   domStore: DOMNode[][] // 存储DOM节点
+  gameArea: HTMLElement // 游戏主体区域DOM元素
   rows: number // 行数
   columns: number //列数
   mineCount: number // 雷数
@@ -30,11 +31,14 @@ class Game {
   htmlElement: HTMLElement // HTML根元素
   customElement: HTMLElement // 自定义选项容器DOM元素
   maxMine: number // 雷的最大数量
+  clickEvent: ((e: MouseEvent) => void) | undefined // 鼠标单击事件
+  contextEvent: ((e: MouseEvent) => void) | undefined // 鼠标右键事件
 
   constructor(level: number, rows: number, columns: number, minCount: number) {
     this.level = level
     this.minePosition = []
     this.domStore = []
+    this.gameArea = document.getElementById('game')!
     this.rows = rows
     this.columns = columns
     this.mineCount = minCount
@@ -50,12 +54,10 @@ class Game {
   }
   // 初始化界面
   init() {
-    // 创建容器元素
-    const gameArea: HTMLElement = document.getElementById('game')!
     // 获取行数和列数
     const { rows, columns } = this
     // 更改Grid布局样式
-    gameArea.style.gridTemplateColumns = `repeat(${columns}, 1fr)`
+    this.gameArea.style.gridTemplateColumns = `repeat(${columns}, 1fr)`
     // 根据游戏等级或自定义来渲染不同数量的单元格
     for(let i = 0; i < rows ; i++) {
       this.domStore[i] = []
@@ -65,7 +67,7 @@ class Game {
         cell.className = 'cell'
         cell.setAttribute('index', i + '-' + j)
         // 向容器中追加DOM节点
-        gameArea.appendChild(cell)
+        this.gameArea.appendChild(cell)
         this.domStore[i][j] = {
           element: cell,
           clickCount: 0,
@@ -78,13 +80,13 @@ class Game {
     // 初始化雷的信息
     this.initMine()
     // 绑定鼠标右键事件
-    this.handleContextMenu(gameArea)
+    this.handleContextMenu()
     // 绑定鼠标单击事件
-    this.handleClick(gameArea)
+    this.handleClick()
     // 初始化雷计数器中的数量
     this.updateSurplusMineCount()
     // 点击按钮切换等级
-    this.changeLevel(gameArea)
+    this.changeLevel()
   }
 
   // 生成地雷
@@ -133,8 +135,8 @@ class Game {
   }
 
   //绑定鼠标右键点击事件
-  handleContextMenu(gameArea: HTMLElement) {
-    gameArea.oncontextmenu = e => {
+  handleContextMenu() {
+    this.contextEvent = e => {
       e.preventDefault()
       // 获取当前点击的单元格坐标
       const { row, column } = this.getCurrentPosition(e)
@@ -164,27 +166,32 @@ class Game {
       // 更新雷计数器中剩余雷的数量
       this.updateSurplusMineCount()
     }
+    // 绑定事件
+    this.gameArea.oncontextmenu = this.contextEvent
   }
 
   // 绑定鼠标单击事件——挖雷模式
-  handleClick(gameArea: HTMLElement) {
-    gameArea.onclick = e => {
+  handleClick() {
+    this.clickEvent = e => {
       // 开始计时
       this.startTime()
       // 获取当前点击单元格的坐标
       const { row, column } = this.getCurrentPosition(e)
       const { isMark, isOpen }  = this.domStore[row][column]
-      console.log(row, column)
       // 该单元格已经标雷或者已被打开
       if (isMark || isOpen) return
       // 挖到雷
       if (this.minePosition[row][column]) {
         this.endTime()
+        this.removeListener() // 移除事件监听器
+        this.showAllMine() // 显示所有的雷
+        this.reset() // 等待重置
         return alert('游戏结束')
       }
       // 挖到空格
       this.show(row, column, this.getMineCount(row, column)) // 显示当前单元格
     }
+    this.gameArea.onclick = this.clickEvent
   }
 
   // 开始计时
@@ -256,7 +263,7 @@ class Game {
   }
 
   // 切换等级
-  changeLevel(gameArea: HTMLElement) {
+  changeLevel() {
     document.getElementById('header')!.onclick = e => {
       const currentNode = e.target as HTMLElement
       const index: number = parseInt(currentNode.getAttribute('index') as string)
@@ -269,26 +276,26 @@ class Game {
       if (index !== 4) this.toggleBtnStyle(currentNode)
       switch(index) {
         case 1: 
-          gameArea.innerHTML = ''
+          this.gameArea.innerHTML = ''
           this.htmlElement.style.fontSize = '16px'
           this.customElement.style.display = 'none'
-          repaint(index, 9, 9, 10)
+          this.repaint(index, 9, 9, 10)
           break
         case 2: 
-          gameArea.innerHTML = ''
+          this.gameArea.innerHTML = ''
           this.htmlElement.style.fontSize = '14px'
           this.customElement.style.display = 'none'
-          repaint(index, 16, 16, 40)
+          this.repaint(index, 16, 16, 40)
           break
         case 3: 
-          gameArea.innerHTML = ''
+          this.gameArea.innerHTML = ''
           this.htmlElement.style.fontSize = '12px'
           this.customElement.style.display = 'none'
-          repaint(index, 16, 30, 99)
+          this.repaint(index, 16, 30, 99)
           break
         case 4: 
           this.customElement.style.display = 'block'
-          this.defineGame(gameArea)
+          this.defineGame()
           break
         default:
           return
@@ -334,34 +341,20 @@ class Game {
   }
   
   // 自定义游戏
-  defineGame(gameArea: HTMLElement) {
+  defineGame() {
     // 显示自定义选项区域
-    this.customElement.style.width = gameArea.offsetWidth + 'px'
-    this.customElement.style.height = gameArea.offsetHeight + 'px'
-    this.customElement.style.top = gameArea.offsetTop + 'px'
+    this.customElement.style.width = this.gameArea.offsetWidth + 'px'
+    this.customElement.style.height = this.gameArea.offsetHeight + 'px'
+    this.customElement.style.top = this.gameArea.offsetTop + 'px'
     // 取消自定义游戏
     document.getElementById('cancel')!.onclick = () => {
       this.customElement.style.display = 'none'
     }
-    // document.getElementById('cancel')!.addEventListener('click', () => {
-    //   this.customElement.style.display = 'none'
-    // })
     // 校验行数和列数是否符合规定
     this.validate(0, 5, 24)
     this.validate(1, 5, 30)
     // 雷自定义的输入框
     const mineInput = document.getElementById('mine')! as HTMLInputElement
-    // mineInput.addEventListener('blur', e => {
-    //   const input = parseInt((e.target as HTMLInputElement).value)
-    //   if ( input < 10 || input > this.maxMine) {
-    //     const tip = document.querySelectorAll('.tip')[2] as HTMLElement
-    //     document.getElementById('mineTip')!.innerText = `必须在10~${this.maxMine}之间`
-    //     tip.style.display = 'block'
-    //     setTimeout(() => tip.style.display = 'none', 2000)
-    //     mineInput.value = '10'
-    //   }
-    // })
-
     // 校验输入的雷数是否符合规定 
     mineInput.onblur = e => {
       const input = parseInt((e.target as HTMLInputElement).value)
@@ -374,30 +367,18 @@ class Game {
       }
     }
 
-    // document.getElementById('repaint')!.addEventListener('click', () => {
-    //   const mineCount = parseInt(mineInput.value)
-    //   const row = parseInt((document.getElementById('row')! as HTMLInputElement).value)
-    //   const column = parseInt((document.getElementById('column')! as HTMLInputElement).value)
-    //   // 重新渲染游戏
-    //   gameArea.innerHTML = '' // 清空界面
-    //   // 移除事件
-    //   this.removeListener(gameArea)
-    //   // 适配每个格子的大小
-    //   this.repaintGUI(row, column, mineCount)
-    // })
-
     // 点击了开始游戏
     document.getElementById('repaint')!.onclick = () => {
       const mineCount = parseInt(mineInput.value)
       const row = parseInt((document.getElementById('row')! as HTMLInputElement).value)
       const column = parseInt((document.getElementById('column')! as HTMLInputElement).value)
       // 重新渲染游戏
-      gameArea.innerHTML = '' // 清空界面
+      this.gameArea.innerHTML = '' // 清空界面
       // 适配每个格子的大小
       this.repaintGUI(row, column, mineCount)
     }
   }
-  
+
   // 重新绘制界面
   repaintGUI(row: number, column: number, mineCount: number) {
     this.toggleBtnStyle(this.btnCollection[3])
@@ -410,12 +391,39 @@ class Game {
       this.htmlElement.style.fontSize = 12 - (cellCount - 256) / 120 + 'px'
     }
     this.customElement.style.display = 'none'
-    repaint(4, row, column, mineCount)
+    this.repaint(4, row, column, mineCount)
+  }
+
+  // 重玩 
+  reset() {
+    document.getElementById('reset')!.onclick = () => {
+      this.gameArea.innerHTML = ''
+      const { level, rows, columns, mineCount } = this
+      this.repaint(level, rows, columns, mineCount)
+    }
+  }
+
+  // 重绘
+  repaint(level: number, row: number, column: number, mineCount: number) {
+    new Game(level, row, column, mineCount).init()
+  }
+
+  // 移除事件监听
+  removeListener() {
+    this.gameArea.onclick = null
+    this.gameArea.oncontextmenu = null
+  }
+
+  // 挖到雷，显示所有雷
+  showAllMine() {
+    const { rows, columns } = this
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < columns; c++) {
+        if (this.minePosition[r][c]) this.domStore[r][c].element.className = 'cell open-mine'
+      }
+    }
   }
 }
 
-function repaint(level: number, row: number, column: number, mineCount: number) {
-  new Game(level, row, column, mineCount).init()
-}
-
-repaint(1, 9, 9, 10)
+// 初始化游戏
+new Game(1, 9, 9, 10).init()
