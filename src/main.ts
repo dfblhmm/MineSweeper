@@ -1,4 +1,5 @@
 // 导入样式文件
+import './style/reset.css'
 import './style/index.less'
 
 // 格子的坐标
