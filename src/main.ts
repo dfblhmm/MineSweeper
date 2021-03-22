@@ -443,4 +443,4 @@ class Game {
 }
 
 // 初始化游戏
-new Game(1, 9, 9, 10).init()
+window.onload = () => new Game(1, 9, 9, 10).init()
