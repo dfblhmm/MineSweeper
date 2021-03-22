@@ -1,6 +1,5 @@
 // 导入样式文件
-import './less/reset.less'
-import './less/index.less'
+import './style/index.less'
 
 // 格子的坐标
 interface Position {
