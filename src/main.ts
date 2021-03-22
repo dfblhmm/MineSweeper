@@ -233,10 +233,12 @@ class Game {
     element.className = 'cell no-mine'
     // 更新还未显示的格子数
     this.surplusCell--
+    // 游戏成功
     if (this.surplusCell === this.mineCount) {
       this.endTime()
       // 遮罩层
-      return this.initMask()
+      this.initMask()
+      return this.reset()
     }
     // 四周有雷
     if (mineSum) {
@@ -395,10 +397,13 @@ class Game {
     this.repaint(4, row, column, mineCount)
   }
 
-  // 重玩 
+  // 等待重玩 
   reset() {
     document.getElementById('reset')!.onclick = () => {
       this.gameArea.innerHTML = ''
+      // 计时归零
+      this.endTime()
+      document.getElementById('timer')!.innerText = '0'
       const { level, rows, columns, mineCount } = this
       this.repaint(level, rows, columns, mineCount)
     }
