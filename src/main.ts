@@ -87,7 +87,8 @@ class Game {
     this.updateSurplusMineCount()
     // 点击按钮切换等级
     this.changeLevel()
-    
+    // 允许用户重置游戏
+    this.reset()
   }
 
   // 生成地雷
@@ -185,8 +186,7 @@ class Game {
       if (this.minePosition[row][column]) {
         this.endTime()
         this.removeListener() // 移除事件监听器
-        this.showAllMine() // 显示所有的雷
-        return this.reset() // 等待重置
+        return this.showAllMine() // 显示所有的雷
       }
       // 挖到空格
       this.show(row, column, this.getMineCount(row, column)) // 显示当前单元格
@@ -237,8 +237,7 @@ class Game {
     if (this.surplusCell === this.mineCount) {
       this.endTime()
       // 遮罩层
-      this.initMask()
-      return this.reset()
+      return this.initMask()
     }
     // 四周有雷
     if (mineSum) {
